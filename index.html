@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProResume - Advanced Resume Builder</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap');
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .form-section {
+            transition: all 0.3s ease;
+        }
+        .form-section:hover {
+            transform: translateY(-2px);
+        }
+        .template-option {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .template-option:hover {
+            transform: scale(1.05);
+        }
+        .template-option.active {
+            ring: 4px;
+            ring-color: #6366f1;
+            transform: scale(1.05);
+        }
+        .resume-preview {
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+        /* Template Styles */
+        .template-modern .sidebar { background: linear-gradient(180deg, #4f46e5, #7c3aed); }
+        .template-classic .header { border-bottom: 3px solid #1f2937; }
+        .template-creative .accent { background: linear-gradient(135deg, #f59e0b, #ef4444); }
+        .template-minimal .divider { border-color: #e5e7eb; }
+        .template-professional .header { background: linear-gradient(90deg, #0f766e, #0d9488); }
+        .photo-upload {
+            position: relative;
+            overflow: hidden;
+        }
+        .photo-upload input[type="file"] {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+        .add-btn {
+            transition: all 0.2s ease;
+        }
+        .add-btn:hover {
+            transform: scale(1.02);
+        }
+        .remove-btn {
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        .entry-item:hover .remove-btn {
+            opacity: 1;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+        }
+        .skill-tag {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 12px;
+            margin: 2px;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-lg sticky top-0 z-50 no-print">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-file-alt text-white text-lg"></i>
+                </div>
+                <h1 class="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">ProResume</h1>
+            </div>
+            <button onclick="downloadPDF()" class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-2.5 rounded-xl font-semibold hover:shadow-lg hover:scale-105 transition-all flex items-center gap-2">
+                <i class="fas fa-download"></i>
+                <span class="hidden sm:inline">Download PDF</span>
+            </button>
+        </div>
+    </header>
+    <!-- Template Selector -->
+    <div class="bg-white border-b no-print">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <h3 class="text-sm font-semibold text-gray-500 mb-3">Choose Template:</h3>
+            <div class="flex gap-3 overflow-x-auto pb-2">
+                <div class="template-option active rounded-lg p-1 border-2 border-indigo-500" data-template="modern" onclick="switchTemplate('modern')">
+                    <div class="w-20 h-24 bg-gradient-to-r from-indigo-500 to-purple-500 rounded flex items-center justify-center">
+                        <span class="text-white text-xs font-medium">Modern</span>
+                    </div>
+                </div>
+                <div class="template-option rounded-lg p-1 border-2 border-gray-200" data-template="classic" onclick="switchTemplate('classic')">
+                    <div class="w-20 h-24 bg-gray-800 rounded flex items-center justify-center">
+                        <span class="text-white text-xs font-medium">Classic</span>
+                    </div>
+                </div>
+                <div class="template-option rounded-lg p-1 border-2 border-gray-200" data-template="creative" onclick="switchTemplate('creative')">
+                    <div class="w-20 h-24 bg-gradient-to-br from-orange-400 to-red-500 rounded flex items-center justify-center">
+                        <span class="text-white text-xs font-medium">Creative</span>
+                    </div>
+                </div>
+                <div class="template-option rounded-lg p-1 border-2 border-gray-200" data-template="minimal" onclick="switchTemplate('minimal')">
+                    <div class="w-20 h-24 bg-white border-2 border-gray-300 rounded flex items-center justify-center">
+                        <span class="text-gray-600 text-xs font-medium">Minimal</span>
+                    </div>
+                </div>
+                <div class="template-option rounded-lg p-1 border-2 border-gray-200" data-template="professional" onclick="switchTemplate('professional')">
+                    <div class="w-20 h-24 bg-gradient-to-r from-teal-600 to-teal-500 rounded flex items-center justify-center">
+                        <span class="text-white text-xs font-medium">Professional</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 py-6">
+        <div class="grid lg:grid-cols-2 gap-6">
+            <!-- Form Section -->
+            <div class="space-y-4 no-print overflow-y-auto max-h-[calc(100vh-200px)]">
+                <!-- Photo Upload -->
+                <div class="form-section bg-white rounded-2xl p-5 shadow-sm">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-camera text-indigo-500"></i> Profile Photo
+                    </h3>
+                    <div class="flex items-center gap-4">
+                        <div class="photo-upload w-24 h-24 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden">
+                            <img id="photoPreview" src="" class="w-full h-full object-cover hidden">
+                            <i id="photoIcon" class="fas fa-plus text-gray-400 text-2xl"></i>
+                            <input type="file" accept="image/*" onchange="uploadPhoto(event)">
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600">Upload a professional photo</p>
+                            <button onclick="removePhoto()" class="text-red-500 text-sm mt-1 hover:underline">Remove photo</button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Personal Info -->
+                <div class="form-section bg-white rounded-2xl p-5 shadow-sm">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-user text-indigo-500"></i> Personal Information
+                    </h3>
+                    <div class="grid sm:grid-cols-2 gap-4">
+                        <input type="text" id="fullName" placeholder="Full Name" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition" oninput="updatePreview()">
+                        <input type="text" id="jobTitle" placeholder="Job Title" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition" oninput="updatePreview()">
+                    </div>
+                    <textarea id="summary" placeholder="Professional Summary" rows="3" class="w-full mt-4 px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition resize-none" oninput="updatePreview()"></textarea>
+                </div>
+                <!-- Contact Details -->
+                <div class="form-section bg-white rounded-2xl p-5 shadow-sm">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-address-book text-indigo-500"></i> Contact Details
+                    </h3>
+                    <div class="grid sm:grid-cols-2 gap-4">
+                        <input type="email" id="email" placeholder="Email Address" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition" oninput="updatePreview()">
+                        <input type="tel" id="phone" placeholder="Phone Number" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition" oninput="updatePreview()">
+                        <input type="text" id="location" placeholder="Location (City, Country)" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition" oninput="updatePreview()">
+                        <input type="url" id="linkedin" placeholder="LinkedIn URL" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition" oninput="updatePreview()">
+                        <input type="url" id="portfolio" placeholder="Portfolio/Website URL" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition sm:col-span-2" oninput="updatePreview()">
+                    </div>
+                </div>
+                <!-- Skills -->
+                <div class="form-section bg-white rounded-2xl p-5 shadow-sm">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-cogs text-indigo-500"></i> Skills
+                    </h3>
+                    <div class="flex gap-2 mb-3">
+                        <input type="text" id="skillInput" placeholder="Add a skill (press Enter)" class="flex-1 px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition" onkeypress="if(event.key==='Enter'){addSkill(); event.preventDefault();}">
+                        <button onclick="addSkill()" class="add-btn bg-indigo-500 text-white px-4 py-3 rounded-xl hover:bg-indigo-600 transition">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                    <div id="skillsList" class="flex flex-wrap gap-2"></div>
+                </div>
+                <!-- Experience -->
+                <div class="form-section bg-white rounded-2xl p-5 shadow-sm">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-briefcase text-indigo-500"></i> Work Experience
+                    </h3>
+                    <div id="experienceList" class="space-y-4"></div>
+                    <button onclick="addExperience()" class="add-btn w-full mt-4 py-3 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-indigo-500 hover:text-indigo-500 transition flex items-center justify-center gap-2">
+                        <i class="fas fa-plus"></i> Add Experience
+                    </button>
+                </div>
+                <!-- Education -->
+                <div class="form-section bg-white rounded-2xl p-5 shadow-sm">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-graduation-cap text-indigo-500"></i> Education
+                    </h3>
+                    <div id="educationList" class="space-y-4"></div>
+                    <button onclick="addEducation()" class="add-btn w-full mt-4 py-3 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-indigo-500 hover:text-indigo-500 transition flex items-center justify-center gap-2">
+                        <i class="fas fa-plus"></i> Add Education
+                    </button>
+                </div>
+                <!-- Projects -->
+                <div class="form-section bg-white rounded-2xl p-5 shadow-sm">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-project-diagram text-indigo-500"></i> Projects
+                    </h3>
+                    <div id="projectsList" class="space-y-4"></div>
+                    <button onclick="addProject()" class="add-btn w-full mt-4 py-3 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-indigo-500 hover:text-indigo-500 transition flex items-center justify-center gap-2">
+                        <i class="fas fa-plus"></i> Add Project
+                    </button>
+                </div>
+            </div>
+            <!-- Preview Section -->
+            <div class="lg:sticky lg:top-24 h-fit">
+                <div class="bg-white rounded-2xl shadow-lg p-4">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-semibold text-gray-700">Live Preview</h3>
+                        <div class="flex items-center gap-2">
+                            <button onclick="zoomOut()" class="p-2 hover:bg-gray-100 rounded-lg transition">
+                                <i class="fas fa-search-minus text-gray-500"></i>
+                            </button>
+                            <span id="zoomLevel" class="text-sm text-gray-500">100%</span>
+                            <button onclick="zoomIn()" class="p-2 hover:bg-gray-100 rounded-lg transition">
+                                <i class="fas fa-search-plus text-gray-500"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="overflow-auto max-h-[70vh] bg-gray-100 rounded-xl p-4">
+                        <div id="resumePreview" class="resume-preview bg-white mx-auto origin-top transition-transform" style="width: 210mm; min-height: 297mm; transform: scale(0.4);">
+                            <!-- Resume content will be rendered here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // State
+        let currentTemplate = 'modern';
+        let zoomScale = 0.4;
+        let skills = [];
+        let experiences = [];
+        let educations = [];
+        let projects = [];
+        let profilePhoto = '';
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            updatePreview();
+            addExperience();
+            addEducation();
+            addProject();
+        });
+        // Photo Upload
+        function uploadPhoto(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    profilePhoto = e.target.result;
+                    document.getElementById('photoPreview').src = profilePhoto;
+                    document.getElementById('photoPreview').classList.remove('hidden');
+                    document.getElementById('photoIcon').classList.add('hidden');
+                    updatePreview();
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+        function removePhoto() {
+            profilePhoto = '';
+            document.getElementById('photoPreview').src = '';
+            document.getElementById('photoPreview').classList.add('hidden');
+            document.getElementById('photoIcon').classList.remove('hidden');
+            updatePreview();
+        }
+        // Skills
+        function addSkill() {
+            const input = document.getElementById('skillInput');
+            const skill = input.value.trim();
+            if (skill && !skills.includes(skill)) {
+                skills.push(skill);
+                renderSkills();
+                updatePreview();
+                input.value = '';
+            }
+        }
+        function removeSkill(index) {
+            skills.splice(index, 1);
+            renderSkills();
+            updatePreview();
+        }
+        function renderSkills() {
+            const container = document.getElementById('skillsList');
+            container.innerHTML = skills.map((skill, index) => `
+                <span class="inline-flex items-center gap-1 bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-sm">
+                    ${skill}
+                    <button onclick="removeSkill(${index})" class="hover:text-red-500 transition">
+                        <i class="fas fa-times text-xs"></i>
+                    </button>
+                </span>
+            `).join('');
+        }
+        // Experience
+        function addExperience() {
+            const id = Date.now();
+            experiences.push({ id, company: '', position: '', duration: '', description: '' });
+            renderExperiences();
+        }
+        function removeExperience(id) {
+            experiences = experiences.filter(e => e.id !== id);
+            renderExperiences();
+            updatePreview();
+        }
+        function updateExperience(id, field, value) {
+            const exp = experiences.find(e => e.id === id);
+            if (exp) exp[field] = value;
+            updatePreview();
+        }
+        function renderExperiences() {
+            const container = document.getElementById('experienceList');
+            container.innerHTML = experiences.map(exp => `
+                <div class="entry-item bg-gray-50 rounded-xl p-4 relative">
+                    <button onclick="removeExperience(${exp.id})" class="remove-btn absolute top-2 right-2 text-red-500 hover:bg-red-100 p-1 rounded-lg transition">
+                        <i class="fas fa-trash text-sm"></i>
+                    </button>
+                    <div class="grid sm:grid-cols-2 gap-3">
+                        <input type="text" placeholder="Company Name" value="${exp.company}" onchange="updateExperience(${exp.id}, 'company', this.value)" class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-indigo-500 outline-none text-sm">
+                        <input type="text" placeholder="Position" value="${exp.position}" onchange="updateExperience(${exp.id}, 'position', this.value)" class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-indigo-500 outline-none text-sm">
+                        <input type="text" placeholder="Duration (e.g., Jan 2020 - Present)" value="${exp.duration}" onchange="updateExperience(${exp.id}, 'duration', this.value)" class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-indigo-500 outline-none text-sm sm:col-span-2">
+                        <textarea placeholder="Job Description" rows="2" onchange="updateExperience(${exp.id}, 'description', this.value)" class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-indigo-500 outline-none text-sm sm:col-span-2 resize-none">${exp.description}</textarea>
+                    </div>
+                </div>
+            `).join('');
+        }
+        // Education
+        function addEducation() {
+            const id = Date.now();
+            educations.push({ id, school: '', degree: '', year: '', gpa: '' });
+            renderEducations();
+        }
+        function removeEducation(id) {
+            educations = educations.filter(e => e.id !== id);
+            renderEducations();
+            updatePreview();
+        }
+        function updateEducation(id, field, value) {
+            const edu = educations.find(e => e.id === id);
+            if (edu) edu[field] = value;
+            updatePreview();
+        }
+        function renderEducations() {
+            const container = document.getElementById('educationList');
+            container.innerHTML = educations.map(edu => `
+                <div class="entry-item bg-gray-50 rounded-xl p-4 relative">
+                    <button onclick="removeEducation(${edu.id})" class="remove-btn absolute top-2 right-2 text-red-500 hover:bg-red-100 p-1 rounded-lg transition">
+                        <i class="fas fa-trash text-sm"></i>
+                    </button>
+                    <div class="grid sm:grid-cols-2 gap-3">
+                        <input type="text" placeholder="School/University" value="${edu.school}" onchange="updateEducation(${edu.id}, 'school', this.value)" class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-indigo-500 outline-none text-sm">
+                        <input type="text" placeholder="Degree" value="${edu.degree}" onchange="updateEducation(${edu.id}, 'degree', this.value)" class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-indigo-500 outline-none text-sm">
+                        <input type="text" placeholder="Year (e.g., 2016 - 2020)" value="${edu.year}" onchange="updateEducation(${edu.id}, 'year', this.value)" class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-indigo-500 outline-none text-sm">
+                        <input type="text" placeholder="GPA (optional)" value="${edu.gpa}" onchange="updateEducation(${edu.id}, 'gpa', this.value)" class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-indigo-500 outline-none text-sm">
+                    </div>
+                </div>
+            `).join('');
+        }
+        // Projects
+        function addProject() {
+            const id = Date.now();
+            projects.push({ id, name: '', technologies: '', description: '', link: '' });
+            renderProjects();
+        }
+        function removeProject(id) {
+            projects = projects.filter(p => p.id !== id);
+            renderProjects();
+            updatePreview();
+        }
+        function updateProject(id, field, value) {
+            const proj = projects.find(p => p.id === id);
+            if (proj) proj[field] = value;
+            updatePreview();
+        }
+        function renderProjects() {
+            const container = document.getElementById('projectsList');
+            container.innerHTML = projects.map(proj => `
+                <div class="entry-item bg-gray-50 rounded-xl p-4 relative">
+                    <button onclick="removeProject(${proj.id})" class="remove-btn absolute top-2 right-2 text-red-500 hover:bg-red-100 p-1 rounded-lg transition">
+                        <i class="fas fa-trash text-sm"></i>
+                    </button>
+                    <div class="grid sm:grid-cols-2 gap-3">
+                        <input type="text" placeholder="Project Name" value="${proj.name}" onchange="updateProject(${proj.id}, 'name', this.value)" class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-indigo-500 outline-none text-sm">
+                        <input type="text" placeholder="Technologies Used" value="${proj.technologies}" onchange="updateProject(${proj.id}, 'technologies', this.value)" class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-indigo-500 outline-none text-sm">
+                        <textarea placeholder="Project Description" rows="2" onchange="updateProject(${proj.id}, 'description', this.value)" class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-indigo-500 outline-none text-sm sm:col-span-2 resize-none">${proj.description}</textarea>
+                        <input type="url" placeholder="Project Link (optional)" value="${proj.link}" onchange="updateProject(${proj.id}, 'link', this.value)" class="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-indigo-500 outline-none text-sm sm:col-span-2">
+                    </div>
+                </div>
+            `).join('');
+        }
+        // Template Switching
+        function switchTemplate(template) {
+            currentTemplate = template;
+            document.querySelectorAll('.template-option').forEach(el => {
+                el.classList.remove('active', 'border-indigo-500');
+                el.classList.add('border-gray-200');
+            });
+            const active = document.querySelector(`[data-template="${template}"]`);
+            active.classList.add('active', 'border-indigo-500');
+            active.classList.remove('border-gray-200');
+            updatePreview();
+        }
+        // Zoom Controls
+        function zoomIn() {
+            zoomScale = Math.min(zoomScale + 0.1, 1);
+            document.getElementById('resumePreview').style.transform = `scale(${zoomScale})`;
+            document.getElementById('zoomLevel').textContent = Math.round(zoomScale * 100) + '%';
+        }
+        function zoomOut() {
+            zoomScale = Math.max(zoomScale - 0.1, 0.2);
+            document.getElementById('resumePreview').style.transform = `scale(${zoomScale})`;
+            document.getElementById('zoomLevel').textContent = Math.round(zoomScale * 100) + '%';
+        }
+        // Get Form Data
+        function getFormData() {
+            return {
+                fullName: document.getElementById('fullName').value || 'Your Name',
+                jobTitle: document.getElementById('jobTitle').value || 'Job Title',
+                summary: document.getElementById('summary').value || '',
+                email: document.getElementById('email').value || '',
+                phone: document.getElementById('phone').value || '',
+                location: document.getElementById('location').value || '',
+                linkedin: document.getElementById('linkedin').value || '',
+                portfolio: document.getElementById('portfolio').value || '',
+                photo: profilePhoto,
+                skills: skills,
+                experiences: experiences.filter(e => e.company || e.position),
+                educations: educations.filter(e => e.school || e.degree),
+                projects: projects.filter(p => p.name)
+            };
+        }
+        // Template Renderers
+        function renderModernTemplate(data) {
+            return `
+                <div style="display: flex; min-height: 100%; font-family: 'Inter', sans-serif;">
+                    <div style="width: 35%; background: linear-gradient(180deg, #4f46e5, #7c3aed); color: white; padding: 30px;">
+                        ${data.photo ? `<img src="${data.photo}" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 4px solid white; margin: 0 auto 20px; display: block;">` : ''}
+                        <h1 style="font-size: 22px; font-weight: 700; margin-bottom: 5px; text-align: center;">${data.fullName}</h1>
+                        <p style="font-size: 14px; opacity: 0.9; text-align: center; margin-bottom: 25px;">${data.jobTitle}</p>
+                        
+                        <div style="margin-bottom: 25px;">
+                            <h3 style="font-size: 12px; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 15px; opacity: 0.8;">Contact</h3>
+                            ${data.email ? `<p style="font-size: 11px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;"><span style="width: 16px;">✉</span>${data.email}</p>` : ''}
+                            ${data.phone ? `<p style="font-size: 11px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;"><span style="width: 16px;">📱</span>${data.phone}</p>` : ''}
+                            ${data.location ? `<p style="font-size: 11px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;"><span style="width: 16px;">📍</span>${data.location}</p>` : ''}
+                            ${data.linkedin ? `<p style="font-size: 11px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;"><span style="width: 16px;">🔗</span>LinkedIn</p>` : ''}
+                            ${data.portfolio ? `<p style="font-size: 11px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;"><span style="width: 16px;">🌐</span>Portfolio</p>` : ''}
+                        </div>
+                        
+                        ${data.skills.length ? `
+                        <div style="margin-bottom: 25px;">
+                            <h3 style="font-size: 12px; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 15px; opacity: 0.8;">Skills</h3>
+                            <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                                ${data.skills.map(s => `<span style="background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 15px; font-size: 10px;">${s}</span>`).join('')}
+                            </div>
+                        </div>` : ''}
+                        
+                        ${data.educations.length ? `
+                        <div>
+                            <h3 style="font-size: 12px; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 15px; opacity: 0.8;">Education</h3>
+                            ${data.educations.map(e => `
+                                <div style="margin-bottom: 15px;">
+                                    <p style="font-size: 12px; font-weight: 600;">${e.degree}</p>
+                                    <p style="font-size: 11px; opacity: 0.9;">${e.school}</p>
+                                    <p style="font-size: 10px; opacity: 0.7;">${e.year}${e.gpa ? ` | GPA: ${e.gpa}` : ''}</p>
+                                </div>
+                            `).join('')}
+                        </div>` : ''}
+                    </div>
+                    
+                    <div style="width: 65%; padding: 30px;">
+                        ${data.summary ? `
+                        <div style="margin-bottom: 25px;">
+                            <h2 style="font-size: 14px; text-transform: uppercase; letter-spacing: 2px; color: #4f46e5; margin-bottom: 10px; border-bottom: 2px solid #4f46e5; padding-bottom: 5px;">About Me</h2>
+                            <p style="font-size: 12px; line-height: 1.6; color: #4b5563;">${data.summary}</p>
+                        </div>` : ''}
+                        
+                        ${data.experiences.length ? `
+                        <div style="margin-bottom: 25px;">
+                            <h2 style="font-size: 14px; text-transform: uppercase; letter-spacing: 2px; color: #4f46e5; margin-bottom: 15px; border-bottom: 2px solid #4f46e5; padding-bottom: 5px;">Experience</h2>
+                            ${data.experiences.map(e => `
+                                <div style="margin-bottom: 18px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                                        <h3 style="font-size: 13px; font-weight: 600; color: #1f2937;">${e.position}</h3>
+                                        <span style="font-size: 10px; color: #6b7280;">${e.duration}</span>
+                                    </div>
+                                    <p style="font-size: 12px; color: #4f46e5; margin-bottom: 5px;">${e.company}</p>
+                                    <p style="font-size: 11px; line-height: 1.5; color: #6b7280;">${e.description}</p>
+                                </div>
+                            `).join('')}
+                        </div>` : ''}
+                        
+                        ${data.projects.length ? `
+                        <div>
+                            <h2 style="font-size: 14px; text-transform: uppercase; letter-spacing: 2px; color: #4f46e5; margin-bottom: 15px; border-bottom: 2px solid #4f46e5; padding-bottom: 5px;">Projects</h2>
+                            ${data.projects.map(p => `
+                                <div style="margin-bottom: 15px;">
+                                    <h3 style="font-size: 13px; font-weight: 600; color: #1f2937;">${p.name}</h3>
+                                    <p style="font-size: 10px; color: #4f46e5; margin-bottom: 3px;">${p.technologies}</p>
+                                    <p style="font-size: 11px; line-height: 1.5; color: #6b7280;">${p.description}</p>
+                                </div>
+                            `).join('')}
+                        </div>` : ''}
+                    </div>
+                </div>
+            `;
+        }
+        function renderClassicTemplate(data) {
+            return `
+                <div style="padding: 40px; font-family: 'Roboto', sans-serif;">
+                    <div style="text-align: center; border-bottom: 3px solid #1f2937; padding-bottom: 20px; margin-bottom: 25px;">
+                        ${data.photo ? `<img src="${data.photo}" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin-bottom: 15px;">` : ''}
+                        <h1 style="font-size: 28px; font-weight: 700; color: #1f2937; margin-bottom: 5px;">${data.fullName}</h1>
+                        <p style="font-size: 16px; color: #4b5563; margin-bottom: 10px;">${data.jobTitle}</p>
+                        <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 15px; font-size: 12px; color: #6b7280;">
+                            ${data.email ? `<span>✉ ${data.email}</span>` : ''}
+                            ${data.phone ? `<span>📱 ${data.phone}</span>` : ''}
+                            ${data.location ? `<span>📍 ${data.location}</span>` : ''}
+                        </div>
+                    </div>
+                    
+                    ${data.summary ? `
+                    <div style="margin-bottom: 25px;">
+                        <h2 style="font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: #1f2937; margin-bottom: 10px; font-weight: 700;">Professional Summary</h2>
+                        <p style="font-size: 12px; line-height: 1.7; color: #4b5563;">${data.summary}</p>
+                    </div>` : ''}
+                    
+                    ${data.experiences.length ? `
+                    <div style="margin-bottom: 25px;">
+                        <h2 style="font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: #1f2937; margin-bottom: 15px; font-weight: 700;">Work Experience</h2>
+                        ${data.experiences.map(e => `
+                            <div style="margin-bottom: 18px; padding-left: 15px; border-left: 2px solid #1f2937;">
+                                <div style="display: flex; justify-content: space-between;">
+                                    <h3 style="font-size: 13px; font-weight: 600; color: #1f2937;">${e.position}</h3>
+                                    <span style="font-size: 11px; color: #6b7280;">${e.duration}</span>
+                                </div>
+                                <p style="font-size: 12px; font-style: italic; color: #4b5563; margin-bottom: 5px;">${e.company}</p>
+                                <p style="font-size: 11px; line-height: 1.6; color: #6b7280;">${e.description}</p>
+                            </div>
+                        `).join('')}
+                    </div>` : ''}
+                    
+                    <div style="display: flex; gap: 30px;">
+                        ${data.educations.length ? `
+                        <div style="flex: 1;">
+                            <h2 style="font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: #1f2937; margin-bottom: 15px; font-weight: 700;">Education</h2>
+                            ${data.educations.map(e => `
+                                <div style="margin-bottom: 12px;">
+                                    <p style="font-size: 12px; font-weight: 600; color: #1f2937;">${e.degree}</p>
+                                    <p style="font-size: 11px; color: #4b5563;">${e.school}</p>
+                                    <p style="font-size: 10px; color: #6b7280;">${e.year}</p>
+                                </div>
+                            `).join('')}
+                        </div>` : ''}
+                        
+                        ${data.skills.length ? `
+                        <div style="flex: 1;">
+                            <h2 style="font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: #1f2937; margin-bottom: 15px; font-weight: 700;">Skills</h2>
+                            <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                                ${data.skills.map(s => `<span style="background: #f3f4f6; color: #1f2937; padding: 4px 12px; border-radius: 3px; font-size: 11px;">${s}</span>`).join('')}
+                            </div>
+                        </div>` : ''}
+                    </div>
+                    
+                    ${data.projects.length ? `
+                    <div style="margin-top: 25px;">
+                        <h2 style="font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: #1f2937; margin-bottom: 15px; font-weight: 700;">Projects</h2>
+                        ${data.projects.map(p => `
+                            <div style="margin-bottom: 12px;">
+                                <h3 style="font-size: 12px; font-weight: 600; color: #1f2937;">${p.name} <span style="font-weight: 400; color: #6b7280;">— ${p.technologies}</span></h3>
+                                <p style="font-size: 11px; line-height: 1.5; color: #6b7280;">${p.description}</p>
+                            </div>
+                        `).join('')}
+                    </div>` : ''}
+                </div>
+            `;
+        }
+        function renderCreativeTemplate(data) {
+            return `
+                <div style="font-family: 'Inter', sans-serif;">
+                    <div style="background: linear-gradient(135deg, #f59e0b, #ef4444); color: white; padding: 40px; position: relative;">
+                        <div style="display: flex; align-items: center; gap: 25px;">
+                            ${data.photo ? `<img src="${data.photo}" style="width: 110px; height: 110px; border-radius: 20px; object-fit: cover; border: 4px solid white;">` : ''}
+                            <div>
+                                <h1 style="font-size: 32px; font-weight: 800; margin-bottom: 5px;">${data.fullName}</h1>
+                                <p style="font-size: 18px; opacity: 0.9;">${data.jobTitle}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="padding: 30px; background: #fef3c7;">
+                        <div style="display: flex; flex-wrap: wrap; gap: 20px; font-size: 12px; color: #92400e;">
+                            ${data.email ? `<span>✉ ${data.email}</span>` : ''}
+                            ${data.phone ? `<span>📱 ${data.phone}</span>` : ''}
+                            ${data.location ? `<span>📍 ${data.location}</span>` : ''}
+                            ${data.linkedin ? `<span>🔗 LinkedIn</span>` : ''}
+                        </div>
+                    </div>
+                    
+                    <div style="padding: 30px;">
+                        ${data.summary ? `
+                        <div style="margin-bottom: 25px;">
+                            <h2 style="font-size: 16px; font-weight: 700; color: #ef4444; margin-bottom: 10px;">✨ About Me</h2>
+                            <p style="font-size: 12px; line-height: 1.7; color: #4b5563;">${data.summary}</p>
+                        </div>` : ''}
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                            <div>
+                                ${data.experiences.length ? `
+                                <div style="margin-bottom: 25px;">
+                                    <h2 style="font-size: 16px; font-weight: 700; color: #ef4444; margin-bottom: 15px;">💼 Experience</h2>
+                                    ${data.experiences.map(e => `
+                                        <div style="margin-bottom: 18px; padding: 15px; background: linear-gradient(135deg, #fef3c7, #fde68a); border-radius: 12px;">
+                                            <h3 style="font-size: 13px; font-weight: 600; color: #92400e;">${e.position}</h3>
+                                            <p style="font-size: 11px; color: #b45309;">${e.company} | ${e.duration}</p>
+                                            <p style="font-size: 11px; line-height: 1.5; color: #78350f; margin-top: 5px;">${e.description}</p>
+                                        </div>
+                                    `).join('')}
+                                </div>` : ''}
+                                
+                                ${data.projects.length ? `
+                                <div>
+                                    <h2 style="font-size: 16px; font-weight: 700; color: #ef4444; margin-bottom: 15px;">🚀 Projects</h2>
+                                    ${data.projects.map(p => `
+                                        <div style="margin-bottom: 12px; padding: 12px; border-left: 3px solid #f59e0b;">
+                                            <h3 style="font-size: 12px; font-weight: 600; color: #1f2937;">${p.name}</h3>
+                                            <p style="font-size: 10px; color: #f59e0b;">${p.technologies}</p>
+                                            <p style="font-size: 11px; color: #6b7280;">${p.description}</p>
+                                        </div>
+                                    `).join('')}
+                                </div>` : ''}
+                            </div>
+                            
+                            <div>
+                                ${data.skills.length ? `
+                                <div style="margin-bottom: 25px;">
+                                    <h2 style="font-size: 16px; font-weight: 700; color: #ef4444; margin-bottom: 15px;">⚡ Skills</h2>
+                                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                        ${data.skills.map(s => `<span style="background: linear-gradient(135deg, #f59e0b, #ef4444); color: white; padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: 500;">${s}</span>`).join('')}
+                                    </div>
+                                </div>` : ''}
+                                
+                                ${data.educations.length ? `
+                                <div>
+                                    <h2 style="font-size: 16px; font-weight: 700; color: #ef4444; margin-bottom: 15px;">🎓 Education</h2>
+                                    ${data.educations.map(e => `
+                                        <div style="margin-bottom: 15px; padding: 12px; background: #fef3c7; border-radius: 10px;">
+                                            <p style="font-size: 12px; font-weight: 600; color: #92400e;">${e.degree}</p>
+                                            <p style="font-size: 11px; color: #b45309;">${e.school}</p>
+                                            <p style="font-size: 10px; color: #78350f;">${e.year}${e.gpa ? ` • GPA: ${e.gpa}` : ''}</p>
+                                        </div>
+                                    `).join('')}
+                                </div>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        function renderMinimalTemplate(data) {
+            return `
+                <div style="padding: 50px; font-family: 'Inter', sans-serif; max-width: 100%;">
+                    <div style="display: flex; align-items: center; gap: 30px; margin-bottom: 40px;">
+                        ${data.photo ? `<img src="${data.photo}" style="width: 90px; height: 90px; border-radius: 50%; object-fit: cover;">` : ''}
+                        <div>
+                            <h1 style="font-size: 30px; font-weight: 300; color: #111827; letter-spacing: -1px;">${data.fullName}</h1>
+                            <p style="font-size: 14px; color: #9ca3af; font-weight: 300;">${data.jobTitle}</p>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 35px; padding-bottom: 25px; border-bottom: 1px solid #e5e7eb;">
+                        ${data.email ? `<span style="font-size: 12px; color: #6b7280;">${data.email}</span>` : ''}
+                        ${data.phone ? `<span style="font-size: 12px; color: #6b7280;">${data.phone}</span>` : ''}
+                        ${data.location ? `<span style="font-size: 12px; color: #6b7280;">${data.location}</span>` : ''}
+                    </div>
+                    
+                    ${data.summary ? `
+                    <div style="margin-bottom: 35px;">
+                        <p style="font-size: 13px; line-height: 1.8; color: #4b5563; font-weight: 300;">${data.summary}</p>
+                    </div>` : ''}
+                    
+                    ${data.experiences.length ? `
+                    <div style="margin-bottom: 35px;">
+                        <h2 style="font-size: 11px; text-transform: uppercase; letter-spacing: 3px; color: #9ca3af; margin-bottom: 20px;">Experience</h2>
+                        ${data.experiences.map(e => `
+                            <div style="margin-bottom: 20px;">
+                                <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                                    <h3 style="font-size: 14px; font-weight: 500; color: #111827;">${e.position} <span style="font-weight: 300; color: #6b7280;">at ${e.company}</span></h3>
+                                    <span style="font-size: 11px; color: #9ca3af;">${e.duration}</span>
+                                </div>
+                                <p style="font-size: 12px; line-height: 1.7; color: #6b7280; margin-top: 5px; font-weight: 300;">${e.description}</p>
+                            </div>
+                        `).join('')}
+                    </div>` : ''}
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
+                        ${data.educations.length ? `
+                        <div>
+                            <h2 style="font-size: 11px; text-transform: uppercase; letter-spacing: 3px; color: #9ca3af; margin-bottom: 20px;">Education</h2>
+                            ${data.educations.map(e => `
+                                <div style="margin-bottom: 15px;">
+                                    <p style="font-size: 13px; font-weight: 500; color: #111827;">${e.degree}</p>
+                                    <p style="font-size: 12px; color: #6b7280; font-weight: 300;">${e.school}, ${e.year}</p>
+                                </div>
+                            `).join('')}
+                        </div>` : ''}
+                        
+                        ${data.skills.length ? `
+                        <div>
+                            <h2 style="font-size: 11px; text-transform: uppercase; letter-spacing: 3px; color: #9ca3af; margin-bottom: 20px;">Skills</h2>
+                            <p style="font-size: 12px; color: #6b7280; line-height: 1.8; font-weight: 300;">${data.skills.join(' • ')}</p>
+                        </div>` : ''}
+                    </div>
+                    
+                    ${data.projects.length ? `
+                    <div style="margin-top: 35px;">
+                        <h2 style="font-size: 11px; text-transform: uppercase; letter-spacing: 3px; color: #9ca3af; margin-bottom: 20px;">Projects</h2>
+                        ${data.projects.map(p => `
+                            <div style="margin-bottom: 15px;">
+                                <h3 style="font-size: 13px; font-weight: 500; color: #111827;">${p.name}</h3>
+                                <p style="font-size: 11px; color: #9ca3af; margin-bottom: 3px;">${p.technologies}</p>
+                                <p style="font-size: 12px; color: #6b7280; font-weight: 300;">${p.description}</p>
+                            </div>
+                        `).join('')}
+                    </div>` : ''}
+                </div>
+            `;
+        }
+        function renderProfessionalTemplate(data) {
+            return `
+                <div style="font-family: 'Roboto', sans-serif;">
+                    <div style="background: linear-gradient(90deg, #0f766e, #0d9488); color: white; padding: 35px 40px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div style="display: flex; align-items: center; gap: 20px;">
+                                ${data.photo ? `<img src="${data.photo}" style="width: 100px; height: 100px; border-radius: 10px; object-fit: cover; border: 3px solid rgba(255,255,255,0.3);">` : ''}
+                                <div>
+                                    <h1 style="font-size: 28px; font-weight: 700; margin-bottom: 5px;">${data.fullName}</h1>
+                                    <p style="font-size: 15px; opacity: 0.9;">${data.jobTitle}</p>
+                                </div>
+                            </div>
+                            <div style="text-align: right; font-size: 11px; opacity: 0.9;">
+                                ${data.email ? `<p style="margin-bottom: 4px;">${data.email}</p>` : ''}
+                                ${data.phone ? `<p style="margin-bottom: 4px;">${data.phone}</p>` : ''}
+                                ${data.location ? `<p>${data.location}</p>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="padding: 30px 40px;">
+                        ${data.summary ? `
+                        <div style="margin-bottom: 25px; padding: 20px; background: #f0fdfa; border-left: 4px solid #0d9488; border-radius: 0 8px 8px 0;">
+                            <h2 style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: #0f766e; margin-bottom: 8px; font-weight: 600;">Professional Summary</h2>
+                            <p style="font-size: 12px; line-height: 1.7; color: #374151;">${data.summary}</p>
+                        </div>` : ''}
+                        
+                        ${data.experiences.length ? `
+                        <div style="margin-bottom: 25px;">
+                            <h2 style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: #0f766e; margin-bottom: 15px; font-weight: 600; padding-bottom: 8px; border-bottom: 2px solid #0d9488;">Work Experience</h2>
+                            ${data.experiences.map(e => `
+                                <div style="margin-bottom: 18px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                                        <h3 style="font-size: 14px; font-weight: 600; color: #111827;">${e.position}</h3>
+                                        <span style="font-size: 11px; color: #0d9488; font-weight: 500;">${e.duration}</span>
+                                    </div>
+                                    <p style="font-size: 12px; color: #0f766e; margin-bottom: 5px;">${e.company}</p>
+                                    <p style="font-size: 11px; line-height: 1.6; color: #6b7280;">${e.description}</p>
+                                </div>
+                            `).join('')}
+                        </div>` : ''}
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                            <div>
+                                ${data.educations.length ? `
+                                <div style="margin-bottom: 25px;">
+                                    <h2 style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: #0f766e; margin-bottom: 15px; font-weight: 600; padding-bottom: 8px; border-bottom: 2px solid #0d9488;">Education</h2>
+                                    ${data.educations.map(e => `
+                                        <div style="margin-bottom: 12px;">
+                                            <p style="font-size: 13px; font-weight: 600; color: #111827;">${e.degree}</p>
+                                            <p style="font-size: 11px; color: #0f766e;">${e.school}</p>
+                                            <p style="font-size: 10px; color: #6b7280;">${e.year}${e.gpa ? ` | GPA: ${e.gpa}` : ''}</p>
+                                        </div>
+                                    `).join('')}
+                                </div>` : ''}
+                                
+                                ${data.skills.length ? `
+                                <div>
+                                    <h2 style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: #0f766e; margin-bottom: 15px; font-weight: 600; padding-bottom: 8px; border-bottom: 2px solid #0d9488;">Skills</h2>
+                                    <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                                        ${data.skills.map(s => `<span style="background: #ccfbf1; color: #0f766e; padding: 5px 12px; border-radius: 5px; font-size: 11px;">${s}</span>`).join('')}
+                                    </div>
+                                </div>` : ''}
+                            </div>
+                            
+                            ${data.projects.length ? `
+                            <div>
+                                <h2 style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: #0f766e; margin-bottom: 15px; font-weight: 600; padding-bottom: 8px; border-bottom: 2px solid #0d9488;">Key Projects</h2>
+                                ${data.projects.map(p => `
+                                    <div style="margin-bottom: 15px; padding: 12px; background: #f0fdfa; border-radius: 8px;">
+                                        <h3 style="font-size: 12px; font-weight: 600; color: #111827;">${p.name}</h3>
+                                        <p style="font-size: 10px; color: #0d9488; margin-bottom: 3px;">${p.technologies}</p>
+                                        <p style="font-size: 11px; color: #6b7280;">${p.description}</p>
+                                    </div>
+                                `).join('')}
+                            </div>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        // Update Preview
+        function updatePreview() {
+            const data = getFormData();
+            const preview = document.getElementById('resumePreview');
+            
+            let html = '';
+            switch(currentTemplate) {
+                case 'modern': html = renderModernTemplate(data); break;
+                case 'classic': html = renderClassicTemplate(data); break;
+                case 'creative': html = renderCreativeTemplate(data); break;
+                case 'minimal': html = renderMinimalTemplate(data); break;
+                case 'professional': html = renderProfessionalTemplate(data); break;
+            }
+            
+            preview.innerHTML = html;
+        }
+        // Download PDF
+        function downloadPDF() {
+            const element = document.getElementById('resumePreview');
+            const data = getFormData();
+            
+            const opt = {
+                margin: 0,
+                filename: `${data.fullName.replace(/\s+/g, '_')}_Resume.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            
+            // Temporarily reset scale for PDF
+            const originalTransform = element.style.transform;
+            element.style.transform = 'scale(1)';
+            
+            html2pdf().set(opt).from(element).save().then(() => {
+                element.style.transform = originalTransform;
+            });
+        }
+    </script>
+</body>
+</html>
